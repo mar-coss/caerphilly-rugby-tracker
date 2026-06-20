@@ -82,6 +82,12 @@ export function Dialog({
   }
 
   return (
+    /*
+     * On mobile the native <dialog> is horizontally and vertically centered
+     * but can overflow the viewport on small screens with long forms.
+     * We constrain the inner panel to 90vh with overflow-y-auto so it scrolls
+     * rather than clipping. mx-4 prevents edge-to-edge rendering on phones.
+     */
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
@@ -90,16 +96,17 @@ export function Dialog({
       className={cn(
         // Reset browser default <dialog> styles
         'p-0 bg-transparent backdrop:bg-black/40 backdrop:backdrop-blur-sm',
-        // Centering — native <dialog> is centred in the viewport
-        'rounded-xl shadow-xl',
-        'w-full',
+        // Width: full viewport width minus safe margins on mobile
+        'w-[calc(100%-2rem)] mx-4',
         SIZE_CLASSES[size],
+        // Rounded shadow
+        'rounded-xl shadow-xl',
       )}
     >
-      <div className="bg-white rounded-xl">
+      <div className="bg-white rounded-xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100">
-          <div>
+        <div className="flex items-start justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-4 border-b border-gray-100 shrink-0">
+          <div className="min-w-0">
             <h2 id={titleId} className="text-base font-semibold text-gray-900">
               {title}
             </h2>
@@ -112,7 +119,7 @@ export function Dialog({
             onClick={onClose}
             aria-label="Close dialog"
             className="
-              -mr-1 -mt-1 ml-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-md
+              -mr-1 -mt-1 ml-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-md
               text-gray-400 hover:bg-gray-100 hover:text-gray-600
               focus:outline-none focus:ring-2 focus:ring-green-600
               transition-colors duration-100
@@ -130,8 +137,8 @@ export function Dialog({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5">{children}</div>
+        {/* Body — scrollable if content exceeds viewport height */}
+        <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto">{children}</div>
       </div>
     </dialog>
   );

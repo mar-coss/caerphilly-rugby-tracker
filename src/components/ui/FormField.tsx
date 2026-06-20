@@ -56,9 +56,15 @@ export function FormField({
   );
 }
 
-/** Shared className string for all text inputs and selects in forms. */
+/**
+ * Shared className string for all text inputs and selects in forms.
+ *
+ * `text-base` on mobile prevents iOS Safari from auto-zooming when the input
+ * is tapped (iOS zooms into any input with font-size < 16px). `sm:text-sm`
+ * restores the design-system size on larger screens.
+ */
 export const inputClasses = `
-  block w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+  block w-full rounded-md border border-gray-300 px-3 py-2.5 text-base sm:text-sm
   placeholder:text-gray-400
   focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent
   disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed

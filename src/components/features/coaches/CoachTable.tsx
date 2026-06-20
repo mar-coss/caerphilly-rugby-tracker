@@ -121,9 +121,10 @@ export function CoachTable({ coaches }: CoachTableProps) {
                 >
                   Role
                 </th>
+                {/* Contact hidden on mobile — email/phone take up too much width */}
                 <th
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+                  className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
                 >
                   Contact
                 </th>
@@ -177,6 +178,15 @@ function CoachRow({ coach, isPending, onEdit, onRemove }: CoachRowProps) {
       {/* Name */}
       <td className="px-4 py-3">
         <p className="text-sm font-medium text-gray-900">{coach.full_name}</p>
+        {/* On mobile show email inline so it's still accessible */}
+        {coach.email && (
+          <a
+            href={`mailto:${coach.email}`}
+            className="sm:hidden block text-xs text-green-700 hover:underline mt-0.5"
+          >
+            {coach.email}
+          </a>
+        )}
       </td>
 
       {/* Role */}
@@ -184,8 +194,8 @@ function CoachRow({ coach, isPending, onEdit, onRemove }: CoachRowProps) {
         <CoachRoleBadge role={coach.role} />
       </td>
 
-      {/* Contact */}
-      <td className="px-4 py-3 text-sm text-gray-600">
+      {/* Contact — hidden on mobile */}
+      <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
         {hasContact ? (
           <div className="space-y-0.5">
             {coach.email && (

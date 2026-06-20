@@ -2,23 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* --------------------------------------------------------------------------
+ * Design tokens
+ * The app uses a light-only theme matching Caerphilly RFC's green branding.
+ * Dark-mode overrides are intentionally omitted — a consistent light UI is
+ * more appropriate for a sports club admin tool used on pitchside devices.
+ * -------------------------------------------------------------------------- */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9fafb;  /* gray-50 — matches the dashboard shell bg */
+  --foreground: #111827;  /* gray-900 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* --------------------------------------------------------------------------
+ * Base resets
+ * -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Smooth scrolling for in-page anchors */
+  scroll-behavior: smooth;
+  /* Prevent font size inflation on iOS when rotating to landscape */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  background-color: var(--background);
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Prevent layout shift from scrollbar appearing/disappearing */
+  scrollbar-gutter: stable;
 }
+
+/* --------------------------------------------------------------------------
+ * Focus visible — use browser default for keyboard users, suppress for mouse
+ * The individual components add their own focus:ring styles via Tailwind.
+ * -------------------------------------------------------------------------- */
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Utility
+ * -------------------------------------------------------------------------- */
 
 @layer utilities {
   .text-balance {

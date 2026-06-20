@@ -137,9 +137,10 @@ export function PlayerTable({ players }: PlayerTableProps) {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                {/* Squad number hidden on mobile — not the primary identifier */}
                 <th
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+                  className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
                 >
                   #
                 </th>
@@ -149,9 +150,10 @@ export function PlayerTable({ players }: PlayerTableProps) {
                 >
                   Name
                 </th>
+                {/* Position hidden on mobile */}
                 <th
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+                  className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
                 >
                   Position
                 </th>
@@ -216,21 +218,25 @@ function PlayerRow({
 
   return (
     <tr className="hover:bg-gray-50 transition-colors duration-75">
-      {/* Squad number */}
-      <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-500">
+      {/* Squad number — hidden on mobile */}
+      <td className="hidden sm:table-cell whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-500">
         {formatSquadNumber(player.squad_number)}
       </td>
 
       {/* Name */}
       <td className="px-4 py-3">
         <p className="text-sm font-medium text-gray-900">{player.full_name}</p>
+        {/* Position shown inline on mobile only */}
+        {player.position && (
+          <p className="sm:hidden text-xs text-gray-400 mt-0.5">{player.position}</p>
+        )}
         {player.email && (
-          <p className="text-xs text-gray-400 mt-0.5">{player.email}</p>
+          <p className="hidden sm:block text-xs text-gray-400 mt-0.5">{player.email}</p>
         )}
       </td>
 
-      {/* Position */}
-      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+      {/* Position — hidden on mobile */}
+      <td className="hidden sm:table-cell whitespace-nowrap px-4 py-3 text-sm text-gray-600">
         {player.position ?? <span className="text-gray-300">—</span>}
       </td>
 
