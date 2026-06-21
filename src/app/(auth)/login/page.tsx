@@ -14,11 +14,14 @@ export default function LoginPage() {
     <div className="w-full max-w-sm px-6">
       {/* Club branding */}
       <div className="text-center mb-8">
-        <div
-          className="w-16 h-16 bg-green-700 rounded-full mx-auto mb-4 flex items-center justify-center"
-          aria-hidden="true"
-        >
-          <span className="text-white font-bold text-xl">RFC</span>
+        <div className="flex justify-center mb-6">
+          <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-2xl border-4 border-green-600 bg-white">
+            <img
+              src="/caerphilly-titans-logo.png"
+              alt="Caerphilly Titans"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Caerphilly RFC</h1>
         <p className="text-gray-500 text-sm mt-1">Admin Portal</p>

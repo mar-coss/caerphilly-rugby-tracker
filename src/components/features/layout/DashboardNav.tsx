@@ -164,11 +164,13 @@ function NavLinks({ pathname, onLinkClick }: NavLinksProps) {
 function BrandHeader() {
   return (
     <div className="flex items-center gap-3">
-      <img
-        src="/caerphilly-logo.png"
-        alt="Caerphilly RFC"
-        className="h-10 w-10 object-contain shrink-0"
-      />
+      <div className="w-10 h-10 rounded-full overflow-hidden shadow-md border border-green-400 bg-white flex-shrink-0">
+        <img
+          src="/caerphilly-titans-logo.png"
+          alt="Caerphilly Titans"
+          className="w-full h-full object-cover"
+        />
+      </div>
       <div className="min-w-0">
         <p className="font-semibold text-sm leading-tight">Caerphilly RFC</p>
         <p className="text-green-300 text-xs">Admin Portal</p>
