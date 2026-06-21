@@ -31,7 +31,7 @@ export default async function DashboardLayout({
        * spacer div to push content below it. On md+ the sidebar is a flex
        * sibling so no top padding is needed.
        */}
-      <main className="flex-1 min-w-0 pt-14 md:pt-0 p-4 sm:p-6 md:p-8">
+      <main className="flex-1 min-w-0 pt-20 md:pt-0 p-4 sm:p-6 md:p-8">
         {children}
       </main>
     </div>
