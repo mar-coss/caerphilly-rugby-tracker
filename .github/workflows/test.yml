@@ -1,0 +1,85 @@
+##
+# CI — Test & Type-check
+#
+# Runs on every push to any branch and on every pull request targeting main.
+# The workflow has two jobs that run in parallel:
+#
+#   unit-tests  — runs Vitest (fast, < 30 seconds)
+#   type-check  — runs tsc --noEmit (catches type regressions independently)
+#
+# Both jobs must pass for a PR to be considered green.
+# Status checks are reported directly to the PR via GitHub's built-in
+# job/check integration — no extra tooling required.
+##
+
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+# Cancel any in-progress run for the same branch when a new push arrives.
+# This prevents redundant runs queuing up during rapid iteration.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Unit tests
+  # ---------------------------------------------------------------------------
+  unit-tests:
+    name: Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test
+        env:
+          # Supabase env vars must be present so the server client module
+          # initialises without throwing during test collection.
+          # These are dummy values — the Supabase client is mocked in tests.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+
+  # ---------------------------------------------------------------------------
+  # Job 2: TypeScript type check
+  # ---------------------------------------------------------------------------
+  type-check:
+    name: Type Check (tsc --noEmit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check TypeScript types
+        run: npm run test:types
