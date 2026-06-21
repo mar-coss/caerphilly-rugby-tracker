@@ -15,7 +15,6 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { createSupabaseMock } from '@/tests/supabase-mock';
 import {
   validPlayerFormData,
-  buildFormData,
 } from '@/tests/form-data-builder';
 
 // ---------------------------------------------------------------------------

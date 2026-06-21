@@ -165,6 +165,7 @@ function BrandHeader() {
   return (
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 rounded-full overflow-hidden shadow-md border border-green-400 bg-white flex-shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/caerphilly-titans-logo.png"
           alt="Caerphilly Titans"

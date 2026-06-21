@@ -16,6 +16,7 @@ export default function LoginPage() {
       <div className="text-center mb-8">
         <div className="flex justify-center mb-6">
           <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-2xl border-4 border-green-600 bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/caerphilly-titans-logo.png"
               alt="Caerphilly Titans"
