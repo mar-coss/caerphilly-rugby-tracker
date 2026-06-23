@@ -6,9 +6,9 @@
  * - getTeamLineups: happy path, empty result, and DB error cases
  */
 
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { saveTeamLineup, getTeamLineups } from '../events/[id]/planner/actions';
+import { saveTeamLineup } from '../events/[id]/planner/actions';
 import type { LineupSlot } from '@/types';
 
 vi.mock('next/cache', () => ({

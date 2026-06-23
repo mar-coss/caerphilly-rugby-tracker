@@ -16,7 +16,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getErrorMessage, logError } from '@/lib/utils';
 import type { ActionResult, TeamLineupWithPlayers, LineupSlot } from '@/types';
 import type { PlayerRow } from '@/types/database';
-import { POSITION_COUNT, POSITION_NAMES } from './constants';
 
 // ---------------------------------------------------------------------------
 // Validation

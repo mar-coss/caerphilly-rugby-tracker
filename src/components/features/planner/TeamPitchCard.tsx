@@ -182,7 +182,6 @@ export function TeamPitchCard({
           ) : (
             <PositionList
               positionSlots={positionSlots}
-              activePlayers={activePlayers}
               onSelectPosition={setActivePosition}
             />
           )}
@@ -395,11 +394,10 @@ function PositionSelector({
 
 interface PositionListProps {
   positionSlots: PositionSlot[];
-  activePlayers: PlayerRow[];
   onSelectPosition: (position: number) => void;
 }
 
-function PositionList({ positionSlots, activePlayers: _activePlayers, onSelectPosition }: PositionListProps) {
+function PositionList({ positionSlots, onSelectPosition }: PositionListProps) {
   return (
     <div>
       <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-3">
