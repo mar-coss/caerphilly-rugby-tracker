@@ -2,6 +2,11 @@ import { describe, it, expect } from 'vitest';
 import type { AttendanceWithPlayer } from '@/types';
 import type { AttendanceStatus } from '@/types/database';
 
+// Type for optimistic updates
+type OptimisticAttendance = AttendanceWithPlayer & {
+  optimisticStatus?: AttendanceStatus;
+};
+
 // Test data factory
 function createAttendance(id: string, name: string, status: AttendanceStatus = 'absent'): AttendanceWithPlayer {
   return {
@@ -15,12 +20,15 @@ function createAttendance(id: string, name: string, status: AttendanceStatus = '
     updated_at: new Date().toISOString(),
     player: {
       id: `player-${id}`,
-      club_id: 'club-1',
       first_name: name.split(' ')[0],
       last_name: name.split(' ')[1] || '',
-      position: 'Fly Half',
+      position: 'Fly Half' as const,
       squad_number: 10,
-      is_active: true,
+      status: 'active' as const,
+      date_of_birth: null,
+      email: null,
+      phone: null,
+      notes: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -129,7 +137,7 @@ describe('EventAttendanceRegister - Optimistic Update Reducer', () => {
       );
     };
 
-    const updated = reducer(attendances, { attendanceId: '1', newStatus: 'late' });
+    const updated = reducer(attendances, { attendanceId: '1', newStatus: 'late' }) as OptimisticAttendance[];
 
     // Assert: optimisticStatus is added but other fields are preserved
     expect(updated[0].optimisticStatus).toBe('late');

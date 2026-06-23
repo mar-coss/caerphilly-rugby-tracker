@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { EventTypeBadge } from '@/components/features/events/EventTypeBadge';
 import { EventAttendanceRegister } from '@/components/features/events/EventAttendanceRegister';
+import { TeamLineupsDisplay } from '@/components/features/planner/TeamLineupsDisplay';
+import { getTeamLineups } from './planner/actions';
 import { formatDateTime } from '@/lib/utils';
 import type { AttendanceWithPlayer } from '@/types';
 
@@ -62,7 +64,7 @@ export default async function EventDetailPage({
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
 
-  // Fetch event and attendance rows in parallel.
+  // Fetch event, attendance rows, and (for match events) saved lineups in parallel.
   const [eventResult, attendanceResult] = await Promise.all([
     supabase
       .from('events')
@@ -101,6 +103,12 @@ export default async function EventDetailPage({
   const event = eventResult.data;
   const attendances = (attendanceResult.data ?? []) as AttendanceWithPlayer[];
 
+  // Fetch saved lineups only for match events — avoid an unnecessary DB call
+  // for training/meeting/other event types.
+  const isMatch = event.event_type === 'match';
+  const lineupsResult = isMatch ? await getTeamLineups(id) : null;
+  const savedLineups = lineupsResult?.success ? lineupsResult.data : [];
+
   return (
     <div>
       {/* Back link */}
@@ -128,18 +136,53 @@ export default async function EventDetailPage({
           )}
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
-          {event.title}
-        </h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+              {event.title}
+            </h1>
 
-        {/* Date and location */}
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-          <span>{formatDateTime(event.event_date)}</span>
-          {event.location && (
-            <span className="flex items-center gap-1">
-              <span aria-hidden="true">·</span>
-              {event.location}
-            </span>
+            {/* Date and location */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+              <span>{formatDateTime(event.event_date)}</span>
+              {event.location && (
+                <span className="flex items-center gap-1">
+                  <span aria-hidden="true">·</span>
+                  {event.location}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Plan Teams button — only for match events */}
+          {isMatch && (
+            <Link
+              href={`/events/${id}/planner`}
+              className="
+                inline-flex items-center gap-2 shrink-0
+                rounded-lg bg-green-700 px-4 py-2
+                text-sm font-semibold text-white
+                hover:bg-green-800 active:bg-green-900
+                focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
+                transition-colors duration-100
+              "
+            >
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+              {savedLineups.length > 0 ? 'Edit Teams' : 'Plan Teams'}
+            </Link>
           )}
         </div>
 
@@ -148,6 +191,21 @@ export default async function EventDetailPage({
           <p className="mt-3 text-sm text-gray-600 max-w-prose">{event.notes}</p>
         )}
       </div>
+
+      {/* Saved team lineups — only shown for match events with lineups saved */}
+      {isMatch && savedLineups.length > 0 && (
+        <div className="mb-6">
+          <TeamLineupsDisplay 
+            eventId={id} 
+            lineups={savedLineups}
+            activePlayers={attendances
+              .filter(a => a.player)
+              .map(a => a.player!)
+              .filter((p, i, arr) => arr.findIndex(ap => ap.id === p.id) === i)
+            }
+          />
+        </div>
+      )}
 
       {/* Attendance register — interactive client component */}
       <div>

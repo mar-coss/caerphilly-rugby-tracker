@@ -99,6 +99,24 @@ export type AttendanceRow = {
   notes: string | null;
 };
 
+/**
+ * One slot in a team lineup — maps a pitch position number (1–10) to a player.
+ * Stored inside TeamLineupRow.lineups as a JSONB array.
+ */
+export type LineupSlot = {
+  position: number;    // 1–10
+  player_id: string;  // UUID of the assigned player
+};
+
+export type TeamLineupRow = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  event_id: string;
+  team_number: number;   // 1, 2, 3, …
+  lineups: LineupSlot[]; // ordered by position 1–10
+};
+
 // ---------------------------------------------------------------------------
 // Insert types (for INSERT statements — omit auto-generated fields)
 // ---------------------------------------------------------------------------
@@ -107,6 +125,7 @@ export type PlayerInsert = Omit<PlayerRow, 'id' | 'created_at' | 'updated_at'>;
 export type CoachInsert = Omit<CoachRow, 'id' | 'created_at' | 'updated_at'>;
 export type EventInsert = Omit<EventRow, 'id' | 'created_at' | 'updated_at'>;
 export type AttendanceInsert = Omit<AttendanceRow, 'id' | 'created_at' | 'updated_at'>;
+export type TeamLineupInsert = Omit<TeamLineupRow, 'id' | 'created_at' | 'updated_at'>;
 
 // ---------------------------------------------------------------------------
 // Update types (all fields optional except the primary key)
@@ -116,6 +135,7 @@ export type PlayerUpdate = Partial<PlayerInsert>;
 export type CoachUpdate = Partial<CoachInsert>;
 export type EventUpdate = Partial<EventInsert>;
 export type AttendanceUpdate = Partial<AttendanceInsert>;
+export type TeamLineupUpdate = Partial<TeamLineupInsert>;
 
 // ---------------------------------------------------------------------------
 // Supabase Database generic type (used to type the Supabase client)
@@ -171,6 +191,20 @@ export interface Database {
             columns: ['coach_id'];
             isOneToOne: false;
             referencedRelation: 'coaches';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      team_lineups: {
+        Row: TeamLineupRow;
+        Insert: TeamLineupInsert;
+        Update: TeamLineupUpdate;
+        Relationships: [
+          {
+            foreignKeyName: 'team_lineups_event_id_fkey';
+            columns: ['event_id'];
+            isOneToOne: false;
+            referencedRelation: 'events';
             referencedColumns: ['id'];
           },
         ];
