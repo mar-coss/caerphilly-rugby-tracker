@@ -11,6 +11,8 @@ import type {
   CoachRow,
   EventRow,
   AttendanceRow,
+  TeamLineupRow,
+  LineupSlot,
 } from './database';
 
 // ---------------------------------------------------------------------------
@@ -60,6 +62,29 @@ export type EventAttendanceSheet = {
   event: EventRow;
   attendances: AttendanceWithPlayer[];
 };
+
+// ---------------------------------------------------------------------------
+// Team Lineups
+// ---------------------------------------------------------------------------
+
+/**
+ * A team lineup slot enriched with the full player record.
+ * Used on the planner page and the event detail lineup display.
+ */
+export type LineupSlotWithPlayer = LineupSlot & {
+  player: PlayerRow;
+};
+
+/**
+ * A team lineup row enriched with resolved player data per slot.
+ * Returned by the planner query so the UI does not need to join separately.
+ */
+export type TeamLineupWithPlayers = Omit<TeamLineupRow, 'lineups'> & {
+  lineups: LineupSlotWithPlayer[];
+};
+
+// Re-export LineupSlot so callers only need to import from '@/types'.
+export type { LineupSlot, TeamLineupRow };
 
 // ---------------------------------------------------------------------------
 // Auth
