@@ -129,12 +129,13 @@ export function EventAttendanceRegister({
     OptimisticAction
   >(
     attendances,
-    (currentRows, { attendanceId, newStatus }) =>
-      currentRows.map((row) =>
+    (currentRows, { attendanceId, newStatus }) => {
+      return currentRows.map((row) =>
         row.id === attendanceId
           ? { ...row, optimisticStatus: newStatus }
           : row,
-      ),
+      );
+    },
   );
 
   const handleStatusChange = useCallback(
