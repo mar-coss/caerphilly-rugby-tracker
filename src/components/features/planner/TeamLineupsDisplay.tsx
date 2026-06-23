@@ -63,7 +63,7 @@ interface TeamCardProps {
   activePlayers: PlayerRow[];
 }
 
-function TeamCard({ lineup, activePlayers }: TeamCardProps) {
+function TeamCard({ lineup }: TeamCardProps) {
   // Sort slots by position number so they always display 1 → 10.
   const sortedSlots = [...lineup.lineups].sort((a, b) => a.position - b.position);
 
