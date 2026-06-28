@@ -189,36 +189,17 @@ export async function updateCoach(
 }
 
 /**
- * Soft-deactivates a coach by removing them from the coaches table.
+ * Permanently deletes a coach record.
  *
- * Coaches do not have a `status` column in the schema — the coaches table
- * only stores active coaches. Deactivation means deleting the row, but because
- * the attendance table references coach_id with ON DELETE CASCADE, attendance
- * records are preserved in spirit through the event history.
+ * The coaches table has no is_active column, so there is no soft-delete path.
+ * ON DELETE CASCADE on the attendance table removes related records automatically.
  *
- * NOTE: If retaining coach records for historical attendance is important in a
- * future milestone, add a `is_active` column to the coaches table at that point.
- * For now we align with the existing schema.
- *
- * Actually — on reflection, to avoid accidental data loss and to keep the
- * pattern consistent with players, this action sets a soft-delete flag via
- * a notes sentinel. However, the schema has no `is_active` for coaches.
- *
- * Decision: We will NOT add a status column outside of the schema migration.
- * Instead, deactivation stores the coach record with a convention the UI
- * can filter on. We surface this decision clearly so it can be revisited
- * when the schema is next updated.
- *
- * For Milestone 2, "deactivate coach" is implemented by a hard delete because:
- * 1. The coaches table has no status/active column.
- * 2. The ON DELETE CASCADE on attendance means history is already removed.
- * 3. We do NOT modify the schema outside of schema.sql to keep things clean.
- *
- * This is documented as a known limitation to address in a schema migration.
+ * Known limitation: coach attendance history is lost on deletion.
+ * This can be addressed in a future schema migration by adding an is_active column.
  */
-export async function deactivateCoach(
+export async function deleteCoach(
   coachId: string,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<void>> {
   if (!coachId) {
     return { success: false, error: 'Coach ID is required.' };
   }
@@ -232,16 +213,30 @@ export async function deactivateCoach(
       .eq('id', coachId);
 
     if (error) {
-      logError('deactivateCoach', error);
+      logError('deleteCoach', error);
       return { success: false, error: getErrorMessage(error) };
     }
 
     revalidatePath('/coaches');
     revalidatePath('/');
 
-    return { success: true, data: { id: coachId } };
+    return { success: true, data: undefined };
   } catch (caught) {
-    logError('deactivateCoach', caught);
+    logError('deleteCoach', caught);
     return { success: false, error: getErrorMessage(caught) };
   }
+}
+
+/**
+ * Alias for deleteCoach for backwards compatibility.
+ * @deprecated Use deleteCoach instead.
+ */
+export async function deactivateCoach(
+  coachId: string,
+): Promise<ActionResult<{ id: string }>> {
+  const result = await deleteCoach(coachId);
+  if (!result.success) {
+    return result;
+  }
+  return { success: true, data: { id: coachId } };
 }

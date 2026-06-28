@@ -48,6 +48,7 @@ import {
   updatePlayer,
   deactivatePlayer,
   reactivatePlayer,
+  deletePlayer,
 } from '@/app/(dashboard)/players/actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
@@ -421,6 +422,65 @@ describe('reactivatePlayer', () => {
     await reactivatePlayer('player-uuid-1');
 
     expect(revalidatePath).toHaveBeenCalledWith('/players');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deletePlayer
+// ---------------------------------------------------------------------------
+
+describe('deletePlayer', () => {
+  test('returns success when the delete succeeds', async () => {
+    setQueryResult({ data: null, error: null });
+
+    const result = await deletePlayer('player-uuid-1');
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBeUndefined();
+    }
+  });
+
+  test('returns an error when playerId is empty', async () => {
+    const result = await deletePlayer('');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toMatch(/Player ID is required/i);
+    }
+  });
+
+  test('calls revalidatePath on success', async () => {
+    setQueryResult({ data: null, error: null });
+
+    await deletePlayer('player-uuid-1');
+
+    expect(revalidatePath).toHaveBeenCalledWith('/players');
+  });
+
+  test('returns a DB error message when delete fails', async () => {
+    setQueryResult({
+      data: null,
+      error: { message: 'foreign key violation', code: '23503' },
+    });
+
+    const result = await deletePlayer('player-uuid-1');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('foreign key violation');
+    }
+  });
+
+  test('does not call revalidatePath when the DB returns an error', async () => {
+    setQueryResult({
+      data: null,
+      error: { message: 'permission denied', code: '42501' },
+    });
+
+    await deletePlayer('player-uuid-1');
+
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });
 

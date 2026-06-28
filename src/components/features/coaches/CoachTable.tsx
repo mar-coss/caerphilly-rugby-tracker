@@ -14,7 +14,7 @@ import { CoachRoleBadge } from './CoachRoleBadge';
 import { CoachFormDialog } from './CoachFormDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { deactivateCoach } from '@/app/(dashboard)/coaches/actions';
+import { deleteCoach } from '@/app/(dashboard)/coaches/actions';
 import type { Coach } from '@/types';
 
 interface CoachTableProps {
@@ -23,7 +23,8 @@ interface CoachTableProps {
 
 export function CoachTable({ coaches }: CoachTableProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const [, startTransition] = useTransition();
 
   // Optimistic removal — filter out the coach being deactivated immediately.
   const [optimisticCoaches, removeOptimistically] = useOptimistic(
@@ -45,15 +46,21 @@ export function CoachTable({ coaches }: CoachTableProps) {
 
     // Ask for confirmation before removing — no undo for coaches.
     const confirmed = window.confirm(
-      `Remove ${coach.full_name} from the coaching staff?\n\nThis cannot be undone.`,
+      `Delete ${coach.full_name} from the coaching staff?\n\nThis cannot be undone.`,
     );
     if (!confirmed) return;
 
+    setPendingIds((prev) => new Set(prev).add(coach.id));
     startTransition(async () => {
       removeOptimistically(coach.id);
-      const result = await deactivateCoach(coach.id);
+      const result = await deleteCoach(coach.id);
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(coach.id);
+        return next;
+      });
       if (!result.success) {
-        setErrorMessage(`Failed to remove ${coach.full_name}: ${result.error}`);
+        setErrorMessage(`Failed to delete ${coach.full_name}: ${result.error}`);
         router.refresh();
       }
     });
@@ -139,7 +146,7 @@ export function CoachTable({ coaches }: CoachTableProps) {
                 <CoachRow
                   key={coach.id}
                   coach={coach}
-                  isPending={isPending}
+                  isPending={pendingIds.has(coach.id)}
                   onEdit={() => setEditingCoach(coach)}
                   onRemove={() => handleRemove(coach)}
                 />
@@ -245,15 +252,15 @@ function CoachRow({ coach, isPending, onEdit, onRemove }: CoachRowProps) {
             disabled={isPending}
             className="
               inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-medium
-              text-red-600 border border-red-200 bg-red-50
-              hover:bg-red-100 hover:border-red-300
+              text-red-700 border border-red-300 bg-white
+              hover:bg-red-50 hover:border-red-400
               focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1
               disabled:opacity-40 disabled:cursor-not-allowed
               transition-colors duration-100
             "
           >
             {isPending && <LoadingSpinner size="sm" />}
-            Remove
+            Delete
           </button>
         </div>
       </td>

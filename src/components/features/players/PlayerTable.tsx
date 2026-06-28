@@ -18,7 +18,7 @@ import { PlayerFormDialog } from './PlayerFormDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { formatSquadNumber } from '@/lib/utils';
-import { deactivatePlayer, reactivatePlayer } from '@/app/(dashboard)/players/actions';
+import { deactivatePlayer, reactivatePlayer, deletePlayer } from '@/app/(dashboard)/players/actions';
 import type { Player } from '@/types';
 import type { PlayerStatus } from '@/types/database';
 
@@ -28,12 +28,16 @@ interface PlayerTableProps {
 
 type OptimisticAction =
   | { type: 'deactivate'; id: string }
-  | { type: 'reactivate'; id: string };
+  | { type: 'reactivate'; id: string }
+  | { type: 'delete'; id: string };
 
 function applyOptimisticAction(
   players: Player[],
   action: OptimisticAction,
 ): Player[] {
+  if (action.type === 'delete') {
+    return players.filter((p) => p.id !== action.id);
+  }
   return players.map((p) => {
     if (p.id !== action.id) return p;
     const newStatus: PlayerStatus =
@@ -44,7 +48,8 @@ function applyOptimisticAction(
 
 export function PlayerTable({ players }: PlayerTableProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const [, startTransition] = useTransition();
   const [optimisticPlayers, addOptimisticAction] = useOptimistic(
     players,
     applyOptimisticAction,
@@ -65,23 +70,56 @@ export function PlayerTable({ players }: PlayerTableProps) {
 
   function handleDeactivate(player: Player) {
     setErrorMessage(null);
+    setPendingIds((prev) => new Set(prev).add(player.id));
     startTransition(async () => {
       addOptimisticAction({ type: 'deactivate', id: player.id });
       const result = await deactivatePlayer(player.id);
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(player.id);
+        return next;
+      });
       if (!result.success) {
         setErrorMessage(`Failed to deactivate ${player.full_name}: ${result.error}`);
-        router.refresh(); // Roll back by re-fetching server data
+        router.refresh();
       }
     });
   }
 
   function handleReactivate(player: Player) {
     setErrorMessage(null);
+    setPendingIds((prev) => new Set(prev).add(player.id));
     startTransition(async () => {
       addOptimisticAction({ type: 'reactivate', id: player.id });
       const result = await reactivatePlayer(player.id);
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(player.id);
+        return next;
+      });
       if (!result.success) {
         setErrorMessage(`Failed to reactivate ${player.full_name}: ${result.error}`);
+        router.refresh();
+      }
+    });
+  }
+
+  function handleDelete(player: Player) {
+    if (!confirm(`Are you sure you want to delete ${player.full_name}? This cannot be undone.`)) {
+      return;
+    }
+    setErrorMessage(null);
+    setPendingIds((prev) => new Set(prev).add(player.id));
+    startTransition(async () => {
+      addOptimisticAction({ type: 'delete', id: player.id });
+      const result = await deletePlayer(player.id);
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(player.id);
+        return next;
+      });
+      if (!result.success) {
+        setErrorMessage(`Failed to delete ${player.full_name}: ${result.error}`);
         router.refresh();
       }
     });
@@ -174,10 +212,11 @@ export function PlayerTable({ players }: PlayerTableProps) {
                 <PlayerRow
                   key={player.id}
                   player={player}
-                  isPending={isPending}
+                  isPending={pendingIds.has(player.id)}
                   onEdit={() => setEditingPlayer(player)}
                   onDeactivate={() => handleDeactivate(player)}
                   onReactivate={() => handleReactivate(player)}
+                  onDelete={() => handleDelete(player)}
                 />
               ))}
             </tbody>
@@ -205,6 +244,7 @@ interface PlayerRowProps {
   onEdit: () => void;
   onDeactivate: () => void;
   onReactivate: () => void;
+  onDelete: () => void;
 }
 
 function PlayerRow({
@@ -213,6 +253,7 @@ function PlayerRow({
   onEdit,
   onDeactivate,
   onReactivate,
+  onDelete,
 }: PlayerRowProps) {
   const isActive = player.status === 'active';
 
@@ -299,6 +340,23 @@ function PlayerRow({
               Reactivate
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={isPending}
+            className="
+              inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-medium
+              text-red-700 border border-red-300 bg-white
+              hover:bg-red-50 hover:border-red-400
+              focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1
+              disabled:opacity-40 disabled:cursor-not-allowed
+              transition-colors duration-100
+            "
+          >
+            {isPending && <LoadingSpinner size="sm" />}
+            Delete
+          </button>
         </div>
       </td>
     </tr>

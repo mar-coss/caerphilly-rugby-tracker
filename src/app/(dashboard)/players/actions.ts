@@ -338,3 +338,35 @@ export async function getPlayers(): Promise<ActionResult<Player[]>> {
     return { success: false, error: getErrorMessage(caught) };
   }
 }
+
+/**
+ * Permanently deletes a player and all associated attendance records.
+ */
+export async function deletePlayer(
+  playerId: string,
+): Promise<ActionResult<void>> {
+  if (!playerId) {
+    return { success: false, error: 'Player ID is required.' };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from('players')
+      .delete()
+      .eq('id', playerId);
+
+    if (error) {
+      logError('deletePlayer', error);
+      return { success: false, error: getErrorMessage(error) };
+    }
+
+    revalidatePath('/players');
+    revalidatePath('/');
+    return { success: true, data: undefined };
+  } catch (caught) {
+    logError('deletePlayer', caught);
+    return { success: false, error: getErrorMessage(caught) };
+  }
+}
