@@ -36,6 +36,7 @@ vi.mock('@/lib/supabase/server', () => ({
 import {
   createCoach,
   updateCoach,
+  deleteCoach,
   deactivateCoach,
 } from '@/app/(dashboard)/coaches/actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -274,24 +275,23 @@ describe('updateCoach', () => {
 });
 
 // ---------------------------------------------------------------------------
-// deactivateCoach (hard delete — coaches have no status column)
+// deleteCoach (permanently deletes a coach — coaches have no status column)
 // ---------------------------------------------------------------------------
 
-describe('deactivateCoach', () => {
-  test('returns success with the deleted coach id', async () => {
-    // delete() chain resolves with no data (void), just an error field.
+describe('deleteCoach', () => {
+  test('returns success when delete succeeds', async () => {
     setQueryResult({ data: null, error: null });
 
-    const result = await deactivateCoach('coach-uuid-1');
+    const result = await deleteCoach('coach-uuid-1');
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.id).toBe('coach-uuid-1');
+      expect(result.data).toBeUndefined();
     }
   });
 
   test('returns an error when coachId is empty', async () => {
-    const result = await deactivateCoach('');
+    const result = await deleteCoach('');
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -302,7 +302,7 @@ describe('deactivateCoach', () => {
   test('calls revalidatePath on success', async () => {
     setQueryResult({ data: null, error: null });
 
-    await deactivateCoach('coach-uuid-1');
+    await deleteCoach('coach-uuid-1');
 
     expect(revalidatePath).toHaveBeenCalledWith('/coaches');
     expect(revalidatePath).toHaveBeenCalledWith('/');
@@ -314,7 +314,7 @@ describe('deactivateCoach', () => {
       error: { message: 'foreign key violation', code: '23503' },
     });
 
-    const result = await deactivateCoach('coach-uuid-1');
+    const result = await deleteCoach('coach-uuid-1');
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -328,8 +328,39 @@ describe('deactivateCoach', () => {
       error: { message: 'foreign key violation', code: '23503' },
     });
 
-    await deactivateCoach('coach-uuid-1');
+    await deleteCoach('coach-uuid-1');
 
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deactivateCoach (backwards-compatible alias for deleteCoach)
+// ---------------------------------------------------------------------------
+
+describe('deactivateCoach', () => {
+  test('delegates to deleteCoach and maps the return type', async () => {
+    setQueryResult({ data: null, error: null });
+
+    const result = await deactivateCoach('coach-uuid-1');
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.id).toBe('coach-uuid-1');
+    }
+  });
+
+  test('propagates errors from deleteCoach', async () => {
+    setQueryResult({
+      data: null,
+      error: { message: 'permission denied', code: '42501' },
+    });
+
+    const result = await deactivateCoach('coach-uuid-1');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('permission denied');
+    }
   });
 });
