@@ -90,10 +90,29 @@ export type { LineupSlot, TeamLineupRow };
 // Auth
 // ---------------------------------------------------------------------------
 
+/**
+ * User roles recognised by the application.
+ *
+ * 'coach' — full access to the admin portal. Stored in auth.users app_metadata
+ *           by the restrict_oauth_to_coaches auth hook (for OAuth sign-ins) and
+ *           by manual admin setup for password sign-ins.
+ *
+ * 'parent' — future role for the parent portal (read-only child attendance).
+ *            Defined here now so middleware and role checks can reference it
+ *            without a breaking type change when the parent portal is built.
+ */
+export type AppRole = 'coach' | 'parent';
+
 /** Shape of the authenticated admin user stored in session. */
 export interface AdminUser {
   id: string;
   email: string;
+  /**
+   * Role sourced from app_metadata, which is only writable server-side.
+   * May be undefined for legacy password accounts that pre-date role stamping.
+   * Treat undefined as 'coach' for password accounts (they were set up manually).
+   */
+  role: AppRole | undefined;
 }
 
 // ---------------------------------------------------------------------------

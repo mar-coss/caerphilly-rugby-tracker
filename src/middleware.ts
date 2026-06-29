@@ -5,9 +5,21 @@
  * 1. Refresh the Supabase session cookie on every request (required by @supabase/ssr).
  * 2. Redirect unauthenticated users away from protected routes to /login.
  * 3. Redirect authenticated users away from /login to the dashboard.
+ * 4. Allow the OAuth callback route (/auth/callback) through without a session.
  *
  * The matcher config ensures this runs only on relevant paths, not on
  * static assets or Next.js internals.
+ *
+ * Role enforcement note:
+ * The auth hook (restrict_oauth_to_coaches) stamps `app_metadata.role = 'coach'`
+ * on OAuth sign-ins. When the parent portal is built, add a check here:
+ *
+ *   const role = user.app_metadata?.role;
+ *   if (pathname.startsWith('/parent') && role !== 'parent') redirect('/login');
+ *   if (!pathname.startsWith('/parent') && role !== 'coach') redirect('/login');
+ *
+ * For now, any authenticated user may access the dashboard (there is only one
+ * user type). This will be tightened in a future milestone.
  */
 
 import { createServerClient } from '@supabase/ssr';
@@ -18,7 +30,7 @@ const LOGIN_PATH = '/login';
 const DASHBOARD_PATH = '/';
 
 /** Routes that do not require authentication. */
-const PUBLIC_PATHS = new Set([LOGIN_PATH]);
+const PUBLIC_PATHS = new Set([LOGIN_PATH, '/auth/callback']);
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
